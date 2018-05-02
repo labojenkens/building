@@ -3,6 +3,7 @@ package com.elise.dto;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.security.GeneralSecurityException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -49,7 +50,6 @@ public class CollecteDtoImpl implements CollecteDto {
 
 	/** Global instance of the HTTP transport. */
 	private static HttpTransport HTTP_TRANSPORT;
-	
 
 	/**
 	 * Global instance of the scopes required by this quickstart.
@@ -83,10 +83,11 @@ public class CollecteDtoImpl implements CollecteDto {
 
 		// Build flow and trigger user authorization request.
 		GoogleAuthorizationCodeFlow flow = new GoogleAuthorizationCodeFlow.Builder(HTTP_TRANSPORT, JSON_FACTORY,
-				clientSecrets, SCOPES).setDataStoreFactory(DATA_STORE_FACTORY).setAccessType("offline").setApprovalPrompt("force").build();
+				clientSecrets, SCOPES).setDataStoreFactory(DATA_STORE_FACTORY).setAccessType("offline")
+						.setApprovalPrompt("force").build();
 		Credential credential = new AuthorizationCodeInstalledApp(flow, new LocalServerReceiver()).authorize("user");
 		System.out.println("Credentials saved to " + DATA_STORE_DIR.getAbsolutePath());
-		
+
 		return credential;
 	}
 
@@ -102,6 +103,13 @@ public class CollecteDtoImpl implements CollecteDto {
 				.build();
 	}
 
+	/**
+	 * récuperer la reponse
+	 * 
+	 * @return
+	 * @throws IOException
+	 * @throws GeneralSecurityException
+	 */
 	public static ValueRange getResponse() throws IOException {
 		// Build a new authorized API client service.
 		Sheets service = getSheetsService();
@@ -143,29 +151,28 @@ public class CollecteDtoImpl implements CollecteDto {
 
 	@Override
 	public void validateCollect(int id) {
-		int i= id+1;
-		 String range1 = "A" + i; // TODO: Update placeholder value.
-		 String range2 = "E" + i;
-		 List<String> ranges = Arrays.asList(range1,range2);
-		 DateFormat df = new SimpleDateFormat("dd/MM/yyyy HH:mm");
+		int i = id + 1;
+		String range1 = "A" + i; // TODO: Update placeholder value.
+		String range2 = "E" + i;
+		List<String> ranges = Arrays.asList(range1, range2);
+		DateFormat df = new SimpleDateFormat("dd/MM/yyyy HH:mm");
 
-			// date de collecte du jour
-		 
-			Date today = Calendar.getInstance().getTime();
-			String dateTodayToCollect = df.format(today);
-		 ValueRange body = new ValueRange().setValues(Arrays.asList(
-					Arrays.asList(dateTodayToCollect)));
+		// date de collecte du jour
 
-			try {
-				
-				getSheetsService().spreadsheets().values()
-				.update("1VAaYxZ037sh-O1vYATG-n9WPKg6HvHZS6qnzhDwqHhE", range2, body).setValueInputOption("RAW")
-				.execute();
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-		    
+		Date today = Calendar.getInstance().getTime();
+		String dateTodayToCollect = df.format(today);
+		ValueRange body = new ValueRange().setValues(Arrays.asList(Arrays.asList(dateTodayToCollect)));
+
+		try {
+
+			getSheetsService().spreadsheets().values()
+					.update("1VAaYxZ037sh-O1vYATG-n9WPKg6HvHZS6qnzhDwqHhE", range2, body).setValueInputOption("RAW")
+					.execute();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
 	}
 
 	@Override
@@ -180,37 +187,35 @@ public class CollecteDtoImpl implements CollecteDto {
 			e.printStackTrace();
 		}
 		List<List<Object>> values = response.getValues();
-		List<List<Object>> listt= new ArrayList<>();
-		for (int i=1; i<values.size(); i++){
+		List<List<Object>> listt = new ArrayList<>();
+		for (int i = 1; i < values.size(); i++) {
 			listt.add(values.get(i));
 		}
-			
-		
+
 		ListIterator<List<Object>> it = listt.listIterator();
 
-		 while(it.hasNext()){
-			 objectCollecte = it.next();
-			 listCollecteFinal.add(this.findListCollecteForSheetsObject(objectCollecte));
-	      }
+		while (it.hasNext()) {
+			objectCollecte = it.next();
+			listCollecteFinal.add(this.findListCollecteForSheetsObject(objectCollecte));
+		}
 
 		return listCollecteFinal;
 	}
-	
-	public Collecte findListCollecteForSheetsObject(List<Object> listResult){
-		
-		List<String> listResultStrings = listResult.stream()
-				   .map(object -> Objects.toString(object, null))
-				   .collect(Collectors.toList());
 
-			 Collecte colecte=new Collecte();
-			 colecte.setId(Integer.valueOf(listResultStrings.get(0)));
-			 colecte.setName(listResultStrings.get(1));
-			 colecte.setTypeCollecte(listResultStrings.get(2));
-			 colecte.setDateDemande(listResultStrings.get(3));
-			 if(listResultStrings.size()>4) {
-			 colecte.setDateCollecte(listResultStrings.get(4));
-			 }
-			 
+	public Collecte findListCollecteForSheetsObject(List<Object> listResult) {
+
+		List<String> listResultStrings = listResult.stream().map(object -> Objects.toString(object, null))
+				.collect(Collectors.toList());
+
+		Collecte colecte = new Collecte();
+		colecte.setId(Integer.valueOf(listResultStrings.get(0)));
+		colecte.setName(listResultStrings.get(1));
+		colecte.setTypeCollecte(listResultStrings.get(2));
+		colecte.setDateDemande(listResultStrings.get(3));
+		if (listResultStrings.size() > 4) {
+			colecte.setDateCollecte(listResultStrings.get(4));
+		}
+
 		return colecte;
 	}
 
